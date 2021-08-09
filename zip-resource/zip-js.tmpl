@@ -1,0 +1,245 @@
+function zs_search(){
+  'use strict'
+  let zip_value;
+  const zs_src_path='***api_url***';
+  const zs_loading='';
+  if(typeof(zs_zipcode)!='undefined'&&zs_zipcode!=null&&zs_zipcode!==""&&document.getElementById(zs_zipcode)){
+    zip_value=document.getElementById(zs_zipcode).value;
+  }else if(typeof(zs_zipcode_first)!='undefined'&&typeof(zs_zipcode_last)!='undefined'){
+    zip_value=document.getElementById(zs_zipcode_first).value+document.getElementById(zs_zipcode_last).value;
+  }
+  let loading=document.createElement('span');
+  if(typeof(zs_ziplist)!='undefined'&&zs_ziplist===""){
+    zs_ziplist="blank_zs_ziplist";
+  }
+  if(typeof(zs_ziplist)!='undefined'){
+    let _zl=document.getElementById(zs_ziplist);
+    if(!_zl||_zl==''){
+      let _ele=document.createElement('div');
+      _ele.id=zs_ziplist;
+      _ele.style.cssText='position:absolute;z-index:1000;';
+      let _target=(typeof(zs_zipcode)!=='undefined')?zs_zipcode:zs_zipcode_first;
+      document.getElementById(_target).parentNode.insertBefore(_ele,document.getElementById(_target).nextSibling);
+    }
+  }
+  if(typeof(zs_ziplist)!=='undefined'&&zs_check(zip_value)){
+    loading.setAttribute('id','loading-img');
+    loading.innerHTML=zs_loading;
+    document.getElementById(zs_ziplist).appendChild(loading);
+  }
+  if(typeof(zs_site_id)!=='undefined'&&zs_site_id!=null&&zs_check(zip_value)){
+    let _target=document.createElement('script');
+    _target.charset='utf-8';
+    let _params='?site_id='+encodeURIComponent(zs_site_id);
+    _params+='&zipcode='+encodeURIComponent(zip_value);
+    _params+='&uri='+encodeURIComponent(document.location);
+    if(typeof(zs_data)!=='undefined'&&zs_data=='json'){
+      _params+='&data=json';
+    }else if(typeof(zs_data)!=='undefined'&&zs_data=='xml'){
+      _params+='&data=xml';
+    }else if(typeof(zs_data)!=='undefined'&&zs_data=='php'){
+      _params+='&data=php';
+    }
+    if(typeof(zs_version)!=='undefined'&&isFinite(zs_version)){
+      _params+='&version='+zs_version;
+    }
+    if(typeof(zs_conv)!=='undefined'&&zs_conv.match(/^[a-zA-Z]+$/)){
+      _params+='&conv='+zs_conv;
+    }
+    let zs_src=zs_src_path+_params;
+    _target.src=zs_src;
+    document.body.appendChild(_target);
+  }else{
+    hide_loading();
+    let res_obj = {'result':'error','code':'401','message':'Service Initialization Failed'};
+    if(typeof(zs_site_id)==='undefined'||zs_site_id==null){
+      res_obj.message='SiteID is not defined';
+    }else if(zs_site_id==""){
+      res_obj.message='SiteID is not input';
+    }else if(typeof(zs_zipcode)==='undefined'||zs_zipcode==null){
+      res_obj.message='Zipcode element is not defined';
+    }else if(!document.getElementById(zs_zipcode)){
+      res_obj.message='Zipcode element is not found';
+    }else if(typeof(zip_value)==='undefined'||zip_value==null||zip_value===''){
+      res_obj.message='Zipcode value is not input';
+    }else if(!zs_check(zip_value)){
+      res_obj.message='Zipcode has format error';
+    }
+    if(typeof(zsResponce)==='function'){
+      zsResponce(res_obj);
+    }else if(window.console&&typeof window.console.log==='function'){
+      console.log(res_obj);
+    }
+  }
+}
+function zs_check(zip_value){
+  if(!zip_value) return false;
+  if(0==zip_value.length) return false;
+  if(!zip_value.match(/^[0-9]{3}[-]?[0-9]{0,4}$/)){
+    return false;
+  }
+  return true;
+}
+function zs_select(i){
+  zs_set_address(zip_data.address[i]);
+  zs_erase_list();
+}
+function zs_erase_list(){
+  if(typeof(zs_ziplist)!=='undefined'&&document.getElementById(zs_ziplist)!=null){
+    document.getElementById(zs_ziplist).innerHTML='';
+  }
+}
+function zs_set_address(obj){
+  //zipcode
+  if(typeof(zs_zipcode)!=='undefined'&&document.getElementById(zs_zipcode)!=null){
+    if(document.getElementById(zs_zipcode).value.indexOf('-')>0){
+      document.getElementById(zs_zipcode).value=obj.zipcode.substr(0,3)+'-'+obj.zipcode.substr(3);
+    }else{
+      document.getElementById(zs_zipcode).value=obj.zipcode;
+    }
+  }
+  if(typeof(zs_zipcode_first)!=='undefined'&&document.getElementById(zs_zipcode_first)!=null) document.getElementById(zs_zipcode_first).value=obj.zipcode.substr(0,3);
+  if(typeof(zs_zipcode_last)!=='undefined'&&document.getElementById(zs_zipcode_last)!=null) document.getElementById(zs_zipcode_last).value=obj.zipcode.substr(3);
+  //address
+  if(typeof(zs_address)!=='undefined'&&document.getElementById(zs_address)!=null) document.getElementById(zs_address).value=obj.prefecture+obj.city+obj.town+obj.house_number;
+  if(typeof(zs_address_hira)!=='undefined'&&document.getElementById(zs_address_hira)!=null) document.getElementById(zs_address_hira).value=obj.prefecture_hira+obj.city_hira+obj.town_hira;
+  if(typeof(zs_address_kata)!=='undefined'&&document.getElementById(zs_address_kata)!=null) document.getElementById(zs_address_kata).value=obj.prefecture_kata+obj.city_kata+obj.town_kata;
+  //prefecture
+  if(typeof(zs_prefecture)!=='undefined'&&document.getElementById(zs_prefecture)!=null){
+    if(document.getElementById(zs_prefecture).type!='text'){
+      if(typeof(zs_code_type)!=='undefined'&&zs_code_type=='JIS'){
+        document.getElementById(zs_prefecture).value=obj.pref_code_JIS;
+      }else if(typeof(zs_code_type)!=='undefined'&&zs_code_type=='JARL'){
+        document.getElementById(zs_prefecture).value=obj.pref_code_JARL;
+      }else{
+        document.getElementById(zs_prefecture).value=obj.prefecture;
+      }
+    }else{
+      document.getElementById(zs_prefecture).value=obj.prefecture;
+    }
+  }
+  if(typeof(zs_prefecture_hira)!=='undefined'&&document.getElementById(zs_prefecture_hira)!=null) document.getElementById(zs_prefecture_hira).value=obj.prefecture_hira;
+  if(typeof(zs_prefecture_kata)!=='undefined'&&document.getElementById(zs_prefecture_kata)!=null) document.getElementById(zs_prefecture_kata).value=obj.prefecture_kata;
+  //clear city
+  if(typeof(zs_city)!=='undefined'&&document.getElementById(zs_city)!=null) document.getElementById(zs_city).value='';
+  if(typeof(zs_city_hira)!=='undefined'&&document.getElementById(zs_city_hira)!=null) document.getElementById(zs_city_hira).value='';
+  if(typeof(zs_city_kata)!=='undefined'&&document.getElementById(zs_city_kata)!=null) document.getElementById(zs_city_kata).value='';
+  //clear town
+  if(typeof(zs_town)!=='undefined'&&document.getElementById(zs_town)!=null) document.getElementById(zs_town).value='';
+  if(typeof(zs_town_hira)!=='undefined'&&document.getElementById(zs_town_hira)!=null) document.getElementById(zs_town_hira).value='';
+  if(typeof(zs_town_kata)!=='undefined'&&document.getElementById(zs_town_kata)!=null) document.getElementById(zs_town_kata).value='';
+  //clear annotation
+  if(typeof(zs_annotation)!=='undefined'&&document.getElementById(zs_annotation)!=null) document.getElementById(zs_annotation).value='';
+  if(typeof(zs_annotation_hira)!=='undefined'&&document.getElementById(zs_annotation_hira)!=null) document.getElementById(zs_annotation_hira).value='';
+  if(typeof(zs_annotation_kata)!=='undefined'&&document.getElementById(zs_annotation_kata)!=null) document.getElementById(zs_annotation_kata).value='';
+  //clear company
+  if(typeof(zs_company)!=='undefined'&&document.getElementById(zs_company)!=null) document.getElementById(zs_company).value='';
+  if(typeof(zs_company_hira)!=='undefined'&&document.getElementById(zs_company_hira)!=null) document.getElementById(zs_company_hira).value='';
+  if(typeof(zs_company_kata)!=='undefined'&&document.getElementById(zs_company_kata)!=null) document.getElementById(zs_company_kata).value='';
+  //clear house_number
+  if(typeof(zs_house_number)!=='undefined'&&document.getElementById(zs_house_number)!=null) document.getElementById(zs_house_number).value='';
+  //city
+  if(typeof(zs_city)!=='undefined'&&document.getElementById(zs_city)!=null) document.getElementById(zs_city).value=document.getElementById(zs_city).value+obj.city;
+  if(typeof(zs_city_hira)!=='undefined'&&document.getElementById(zs_city_hira)!=null) document.getElementById(zs_city_hira).value=document.getElementById(zs_city_hira).value+obj.city_hira;
+  if(typeof(zs_city_kata)!=='undefined'&&document.getElementById(zs_city_kata)!=null) document.getElementById(zs_city_kata).value=document.getElementById(zs_city_kata).value+obj.city_kata;
+  //town full(optional)
+  if(typeof(zs_townfull)!=='undefined'){
+    //town
+    if(typeof(zs_town)!=='undefined'&&document.getElementById(zs_town)!=null) document.getElementById(zs_town).value=document.getElementById(zs_town).value+obj.town+obj.house_number+obj.annotation;
+    if(typeof(zs_town_hira)!=='undefined'&&document.getElementById(zs_town_hira)!=null) document.getElementById(zs_town_hira).value=document.getElementById(zs_town_hira).value+obj.town_hira+obj.house_number+obj.annotation_hira;
+    if(typeof(zs_town_kata)!=='undefined'&&document.getElementById(zs_town_kata)!=null) document.getElementById(zs_town_kata).value=document.getElementById(zs_town_kata).value+obj.town_kata+obj.house_number+obj.annotation_kata;
+  }else{
+    //town
+    if(typeof(zs_town)!=='undefined'&&document.getElementById(zs_town)!=null) document.getElementById(zs_town).value=document.getElementById(zs_town).value+obj.town;
+    if(typeof(zs_town_hira)!=='undefined'&&document.getElementById(zs_town_hira)!=null) document.getElementById(zs_town_hira).value=document.getElementById(zs_town_hira).value+obj.town_hira;
+    if(typeof(zs_town_kata)!=='undefined'&&document.getElementById(zs_town_kata)!=null) document.getElementById(zs_town_kata).value=document.getElementById(zs_town_kata).value+obj.town_kata;
+    //annotation
+    if(typeof(zs_annotation)!=='undefined'&&document.getElementById(zs_annotation)!=null) document.getElementById(zs_annotation).value=document.getElementById(zs_annotation).value+obj.annotation;
+    if(typeof(zs_annotation_hira)!=='undefined'&&document.getElementById(zs_annotation_hira)!=null) document.getElementById(zs_annotation_hira).value=document.getElementById(zs_annotation_hira).value+obj.annotation_hira;
+    if(typeof(zs_annotation_kata)!=='undefined'&&document.getElementById(zs_annotation_kata)!=null) document.getElementById(zs_annotation_kata).value=document.getElementById(zs_annotation_kata).value+obj.annotation_kata;
+    //house_number
+    if(typeof(zs_house_number)!=='undefined'&&document.getElementById(zs_house_number)!=null) document.getElementById(zs_house_number).value=document.getElementById(zs_house_number).value+obj.house_number;
+  }
+  //company
+  if(typeof(zs_company)!=='undefined'&&document.getElementById(zs_company)!=null) document.getElementById(zs_company).value=document.getElementById(zs_company).value+obj.company;
+  if(typeof(zs_company_hira)!=='undefined'&&document.getElementById(zs_company_hira)!=null) document.getElementById(zs_company_hira).value=document.getElementById(zs_company_hira).value+obj.company_hira;
+  if(typeof(zs_company_kata)!=='undefined'&&document.getElementById(zs_company_kata)!=null) document.getElementById(zs_company_kata).value=document.getElementById(zs_company_kata).value+obj.company_kata;
+  // -- update 201804 --
+  // 2018.04.13 awano
+  if(typeof(zs_city_code)!=='undefined'&&document.getElementById(zs_city_code)!=null) document.getElementById(zs_city_code).value='';
+  if(typeof(zs_city_code)!=='undefined'&&document.getElementById(zs_city_code)!=null) document.getElementById(zs_city_code).value=document.getElementById(zs_city_code).value+obj.city_code;
+  //clear rome
+  if(typeof(zs_prefecture_rome)!=='undefined'&&document.getElementById(zs_prefecture_rome)!=null) document.getElementById(zs_prefecture_rome).value='';
+  if(typeof(zs_city_rome)!=='undefined'&&document.getElementById(zs_city_rome)!=null) document.getElementById(zs_city_rome).value='';
+  if(typeof(zs_town_rome)!=='undefined'&&document.getElementById(zs_town_rome)!=null) document.getElementById(zs_town_rome).value='';
+  if(typeof(zs_address_rome)!=='undefined'&&document.getElementById(zs_address_rome)!=null) document.getElementById(zs_address_rome).value='';
+  //rome
+  if(typeof(zs_prefecture_rome)!=='undefined'&&document.getElementById(zs_prefecture_rome)!=null) document.getElementById(zs_prefecture_rome).value=document.getElementById(zs_prefecture_rome).value+((typeof(obj.prefecture_rome)!=='undefined'&&obj.prefecture_rome!=null)?obj.prefecture_rome:'');
+  if(typeof(zs_city_rome)!=='undefined'&&document.getElementById(zs_city_rome)!=null) document.getElementById(zs_city_rome).value=document.getElementById(zs_city_rome).value+((typeof(obj.city_rome)!=='undefined'&&obj.city_rome!=null)?obj.city_rome:'');
+  if(typeof(zs_town_rome)!=='undefined'&&document.getElementById(zs_town_rome)!=null) document.getElementById(zs_town_rome).value=document.getElementById(zs_town_rome).value+((typeof(obj.town_rome)!=='undefined'&&obj.town_rome!=null)?obj.town_rome:'');
+  if(typeof(zs_address_rome)!=='undefined'&&document.getElementById(zs_address_rome)!=null) document.getElementById(zs_address_rome).value=document.getElementById(zs_address_rome).value+((typeof(obj.prefecture_rome)!=='undefined'&&obj.prefecture_rome!=null)?obj.prefecture_rome:'')+' '+((typeof(obj.city_rome)!=='undefined'&&obj.city_rome!=null)?obj.city_rome:'')+' '+((typeof(obj.town_rome)!=='undefined'&&obj.town_rome!=null)?obj.town_rome:'');
+  // -- --
+}
+function hide_loading(){
+  let loading=document.getElementById('loading-img');
+  if(typeof(loading)!=undefined&&loading) loading.parentNode.removeChild(loading);
+}
+function zips(data){
+  hide_loading();
+  zip_data=data;
+  if(typeof(zs_ziplist)=='undefined'||zip_data.address.length==1){
+    zs_set_address(zip_data.address[0]);
+    zs_erase_list();
+  }else if(zip_data.address.length>1){
+    let list='';
+    list+='<div style="width:400px;background-color:#afcbe8;padding:5px 10px 10px 10px;" class="zs-ziplist">';
+    list+='<span onClick="zs_erase_list();" style="cursor:pointer;width:20px;font-size:11px;font-weight:bold;text-decoration:none;display:block;text-align:center;padding:3px 7px;color:#fff;background-color:#c75050;margin:-5px -10px 0 0;float:right;" class="zs-erase-button">×</span>';
+    list+='<div style="font-size:80%;color:#333;" class="zs-title">住所を選択してください</div>';
+    list+='<div id="zip_select" style="height:150px;background-color:#fff;overflow:auto;margin:5px 0px 0px 0px;" class="zs-select">';
+    for(let i=0;i<zip_data.address.length;i++){
+      let zipcode='〒'+zip_data.address[i].zipcode.substr(0,3)+'-'+zip_data.address[i].zipcode.substr(3);
+      let prefecture=zip_data.address[i].prefecture;
+      let city=zip_data.address[i].city;
+      let town=zip_data.address[i].town;
+      let house=zip_data.address[i].house_number;
+      //2017.08.30 annotation
+      let annotation=zip_data.address[i].annotation;
+      list+='<div style="cursor:pointer; font-size:80%;padding:7px 0px 3px 5px;background-color:#fff;" onClick="zs_select('+i+');" onmouseover="javascript:this.style.backgroundColor=\'#eee\';" onmouseout="javascript:this.style.backgroundColor=\'#fff\';" class="zs-select-item">'+zipcode+' '+prefecture+city+town+' '+house;
+      if(annotation){
+        list+='('+annotation+')';
+      }
+      list+='</div>';
+    }
+    list+='</div></div>';
+    if(typeof(zs_ziplist)!=='undefined'&&document.getElementById(zs_ziplist)!=null){
+      document.getElementById(zs_ziplist).innerHTML=list;
+      document.getElementById('zip_select').focus();
+    }
+  }
+}
+let str='& < > ` " '+"'";
+let escapeHtml=(function(String){
+  let escapeMap={
+    '&':'&amp;',
+    "'":'&#x27;',
+    '`':'&#x60;',
+    '"':'&quot;',
+    '<':'&lt;',
+    '>':'&gt;'
+  };
+  let escapeReg='[';
+  let reg;
+  for(let p in escapeMap){
+    if(escapeMap.hasOwnProperty(p)){
+      escapeReg+=p;
+    }
+  }
+  escapeReg+=']';
+  reg=new RegExp(escapeReg,'g');
+  return function escapeHtml(str){
+    str=(str===null||str===undefined)?'':''+str;
+    return str.replace(reg,function(match){
+      return escapeMap[match];
+    });
+  };
+}(String));
